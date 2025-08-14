@@ -28,6 +28,7 @@ jobs:
           tags: ${{ secrets.DOCKER_USERNAME }}/pathfinder:${{ github.run_number }}
   
   Deploy:
+    needs: build  
     runs-on: self-hosted
 
     steps:

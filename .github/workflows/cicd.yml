@@ -3,29 +3,39 @@ name: React App CI/CD
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
         with:
-          node-version: '20'
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Install dependencies
-        run: npm install
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/pathfinder:${{ github.run_number }}
+  
+  Deploy:
+    runs-on: self-hosted
 
-      - name: Run tests
-        run: npm test
-
-      - name: Build app
-        run: npm run build
-
-      # Add deployment steps here if needed
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+  
+      - name: Deploy to production
+        run: |
+          echo "Deploying to production..."
+          sed -i "s|image: ${{ secrets.DOCKER_USERNAME }}/pathfinder.*|image: ${{ secrets.DOCKER_USERNAME }}/pathfinder:${{github.run_number}}|" k8s/app.yml
+          kubectl apply -f k8s/

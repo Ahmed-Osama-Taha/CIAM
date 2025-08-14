@@ -1,5 +1,5 @@
 # Use Alpine - 90% smaller than regular node image
-FROM node:20-alpine
+FROM node:20-slim
 
 WORKDIR /app
 

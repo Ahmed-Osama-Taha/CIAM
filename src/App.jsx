@@ -93,13 +93,10 @@ function App() {
         height: '100vh',
         flexDirection: 'column'
       }}>
-        <div>Please log in to continue</div>
-        <button 
-          onClick={() => keycloak?.login()} 
-          style={{ marginTop: '20px', padding: '10px 20px' }}
-        >
-          Login
-        </button>
+        <div>Redirecting to login...</div>
+        <div style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
+          If you're not redirected automatically, check your Keycloak configuration.
+        </div>
       </div>
     );
   }

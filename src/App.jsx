@@ -5,10 +5,13 @@ import { initializeKeycloak } from './services/keycloak';
 import { createContext } from 'react';
 
 const router = createBrowserRouter([
-  { path: '/', element: <Home /> },
+  {
+    path: '/',
+    element: <Home />,
+  },
 ]);
 
-export const AuthenticationContext = createContext();
+export const AuthenticationContext = createContext('authentication');
 
 function App() {
   const [keycloak, setKeycloak] = useState(null);

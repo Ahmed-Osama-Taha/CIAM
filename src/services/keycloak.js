@@ -1,10 +1,18 @@
 import Keycloak from 'keycloak-js';
 
-const _kc = new Keycloak({
-  url: import.meta.env.VITE_SSO_AUTH_SERVER_URL,
-  realm: import.meta.env.VITE_SSO_REALM,
-  clientId: import.meta.env.VITE_SSO_CLIENT_ID,
-});
+// Create a single instance and store it globally to prevent re-initialization
+let _kc = null;
+
+const getKeycloakInstance = () => {
+  if (!_kc) {
+    _kc = new Keycloak({
+      url: import.meta.env.VITE_SSO_AUTH_SERVER_URL,
+      realm: import.meta.env.VITE_SSO_REALM,
+      clientId: import.meta.env.VITE_SSO_CLIENT_ID,
+    });
+  }
+  return _kc;
+};
 
 const loginOptions = {
   redirectUri: import.meta.env.VITE_SSO_REDIRECT_URI,
@@ -13,43 +21,58 @@ const loginOptions = {
 
 export const initializeKeycloak = async () => {
   try {
-    _kc.onTokenExpired = () => {
-      _kc
+    const kc = getKeycloakInstance();
+    
+    // Check if already initialized
+    if (kc.authenticated !== undefined) {
+      console.log('Keycloak already initialized, returning existing instance');
+      return kc;
+    }
+
+    kc.onTokenExpired = () => {
+      kc
         .updateToken(5)
         .then(function (refreshed) {
           if (refreshed) {
-            alert('Token was successfully refreshed');
+            console.log('Token was successfully refreshed');
           } else {
-            alert('Token is still valid');
+            console.log('Token is still valid');
           }
         })
         .catch(function () {
-          alert('Failed to refresh the token, or the session has expired');
+          console.log('Failed to refresh the token, or the session has expired');
         });
     };
 
-    const auth = await _kc.init({
-      pkceMethod: 'S256',
+    // For HTTP environments, disable PKCE to avoid Web Crypto API requirement
+    const initOptions = {
       checkLoginIframe: false,
       onLoad: 'check-sso',
-    });
+    };
+
+    // Only use PKCE in HTTPS environments
+    if (window.location.protocol === 'https:') {
+      initOptions.pkceMethod = 'S256';
+    } else {
+      console.warn('Running in HTTP mode - PKCE disabled for compatibility');
+    }
+
+    const auth = await kc.init(initOptions);
 
     if (auth) {
-      return _kc;
+      return kc;
     } else {
-      _kc.login(loginOptions);
+      kc.login(loginOptions);
     }
   } catch (err) {
-    console.log(err);
+    console.error('Keycloak initialization failed:', err);
+    throw err;
   }
 };
 
-// since we have to perform logout at siteminder, we cannot use keycloak-js logout method so manually triggering logout through a function
-// if using post_logout_redirect_uri, then either client_id or id_token_hint has to be included and post_logout_redirect_uri need to match
-// one of valid post logout redirect uris in the client configuration
-// UPDATED (Standard Keycloak - will work)
 export const logout = () => {
-  _kc.logout({
+  const kc = getKeycloakInstance();
+  kc.logout({
     redirectUri: import.meta.env.VITE_SSO_REDIRECT_URI
   });
 };

@@ -29,7 +29,20 @@ spec:
         - name: VITE_SSO_CLIENT_ID
           value: "pathfinder"  
         - name: VITE_SERVER_URI
-          value: "http://172.20.10.3:30007"  
+          value: "http://172.20.10.3:30008"  # Fixed: was pointing to same port as app
+        # Add health checks
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 5173
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 5173
+          initialDelaySeconds: 5
+          periodSeconds: 5
 
 ---
 apiVersion: v1

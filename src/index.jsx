@@ -1,5 +1,5 @@
 import { useContext, useState } from 'react';
-import { AuthenticationContext } from '../../App';
+import { AuthenticationContext } from './App';
 import { logout } from '../../services/keycloak';
 
 const fetchRestictedContent = (token, setMessage) => {

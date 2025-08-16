@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react';
 import { AuthenticationContext } from './App';
-import { logout } from '../../services/keycloak';
+import { logout } from './services/keycloak';
 
 const fetchRestictedContent = (token, setMessage) => {
     const serverURI = import.meta.env.VITE_SERVER_URI ?? 'http://localhost:8080' 
